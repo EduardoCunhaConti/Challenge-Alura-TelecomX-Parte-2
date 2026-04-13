@@ -278,4 +278,4 @@ Caso necessário, ajuste o caminho no notebook:
 
 # 👨‍💻 Autor
 
-Projeto desenvolvido para fins educacionais na análise de **evasão de clientes utilizando Machine Learning**.
+Projeto desenvolvido por Eduardo Conti para análise de **evasão de clientes utilizando Machine Learning**.
