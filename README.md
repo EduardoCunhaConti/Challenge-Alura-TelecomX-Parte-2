@@ -1,281 +1,111 @@
-# TelecomX - Previsão de Churn de Clientes
+# 🤖 TelecomX — Previsão de Churn com Machine Learning
 
-## Visão Geral do Projeto
-
-Este projeto tem como objetivo **prever a evasão de clientes (churn)** da empresa TelecomX utilizando técnicas de **Machine Learning**.
-
-A análise busca identificar **quais fatores influenciam o cancelamento de serviços**, permitindo que a empresa desenvolva **estratégias de retenção de clientes** baseadas em dados.
-
-O modelo utiliza variáveis relacionadas ao perfil do cliente, tipo de contrato, serviços contratados e valores pagos para **estimar a probabilidade de churn**.
+Segunda etapa do Challenge de Data Science do programa **ONE (Oracle Next Education × Alura)**. A [Parte 1](https://github.com/EduardoCunhaConti/Challenge-Alura-TelecomX) analisou por que os clientes cancelam; aqui o objetivo é **prever** quais clientes têm risco de cancelar, para que a empresa aja antes da perda.
 
 ---
 
-# Objetivo da Análise
+## 🎯 Objetivo
 
-O objetivo principal do projeto é:
-
-- **Construir modelos de Machine Learning capazes de prever o churn de clientes**
-- **Identificar os fatores mais relevantes que influenciam a evasão**
-- **Gerar insights estratégicos para retenção de clientes**
-
-Com isso, a empresa pode **antecipar cancelamentos e agir preventivamente** para reduzir perdas de receita.
+- Treinar modelos de classificação para prever o churn
+- Avaliar os modelos com acurácia, precisão, recall, F1-score e matriz de confusão
+- Identificar as variáveis que mais pesam na decisão de cancelamento
 
 ---
 
-# Estrutura do Projeto
+## 📦 Dados
 
-A organização do projeto segue uma estrutura simples para facilitar a navegação e reprodução da análise.
+- **7.043 clientes** após o tratamento (arquivo `dados_tratados.csv`)
+- 5.174 permaneceram (**73,46%**) e 1.869 cancelaram (**26,54%**): base desbalanceada
+
+---
+
+## 🧹 Preparação dos dados
+
+- Remoção do identificador `customerID`
+- Separação das colunas em numéricas e categóricas
+- `OneHotEncoder` aplicado às categóricas (`gender`, `InternetService`, `Contract`, `PaymentMethod`)
+- Divisão **80% treino / 20% teste**, estratificada pelo churn (`random_state=42`): 5.634 clientes para treino e 1.409 para teste
+- Valores ausentes preenchidos com a **mediana do conjunto de treino**
+- `StandardScaler` para a Regressão Logística
+
+> **Nota:** nesta versão o treinamento usa as 15 variáveis numéricas/binárias (`tenure`, `Charges.Monthly`, `Charges.Total`, serviços contratados etc.). As categóricas codificadas ainda não entram no treino (veja *Próximos passos*).
+
+---
+
+## 🤖 Modelos
+
+| Modelo | Configuração |
+|---|---|
+| Regressão Logística | `max_iter=1000`, dados padronizados |
+| Random Forest | `random_state=42` |
+
+---
+
+## 📊 Resultados (conjunto de teste — 1.409 clientes)
+
+| Modelo | Acurácia | Precisão (churn) | Recall (churn) | F1 (churn) |
+|---|---:|---:|---:|---:|
+| Regressão Logística | 0,795 | 0,650 | 0,492 | 0,560 |
+| Random Forest | 0,789 | 0,638 | 0,471 | 0,542 |
+
+Matrizes de confusão (linhas = real, colunas = previsto):
+
+- **Regressão Logística:** `[[936, 99], [190, 184]]`
+- **Random Forest:** `[[935, 100], [198, 176]]`
+
+**Leitura dos resultados:** os dois modelos acertam cerca de 79% das previsões, mas capturam menos da metade dos cancelamentos (recall entre 47% e 49%). Ou seja, são conservadores ao apontar churn.
+
+---
+
+## 🔎 Variáveis mais relevantes
+
+- **Random Forest (importância):** `Charges.Monthly` (0,252), `Charges.Total` (0,250) e `tenure` (0,214).
+- **Regressão Logística (coeficientes):** `tenure` é o fator que mais reduz a chance de cancelamento (−1,61) e `Charges.Monthly` o que mais a aumenta (+1,15).
+
+Em resumo: clientes novos e com mensalidade alta têm maior risco de cancelar.
+
+---
+
+## 🚀 Próximos passos
+
+- Incluir no treino as variáveis categóricas codificadas, especialmente `Contract`, principal fator da Parte 1
+- Tratar o desbalanceamento (pesos de classe ou reamostragem) e ajustar o limiar de decisão para aumentar o recall
+- Testar outros algoritmos (KNN, SVM) e usar validação cruzada com ajuste de hiperparâmetros
+
+---
+
+## 🛠️ Tecnologias
+
+Python 3 · pandas · scikit-learn · Matplotlib · Seaborn · Google Colab / Jupyter
+
+---
+
+## 📁 Estrutura do projeto
 
 ```
-TelecomX-Churn-Analysis
-│
-├── dados_tratados.csv
-│
-├── Challenge Alura_TelecomX_Parte_2.ipynb
-│
+Challenge-Alura-TelecomX-Parte-2/
+├── Challenge Alura_TelecomX_Parte_2.ipynb   # preparação, modelagem e avaliação
+├── dados_tratados.csv                       # dados tratados usados na modelagem
 └── README.md
-
-```
-
-### Descrição dos Arquivos
-
-**dados_tratados.csv**  
-Contém os dados tratados utilizados na modelagem.
-
-**Challenge Alura_TelecomX_Parte_2.ipynb**  
-Contém o notebook principal com toda a análise, preparação de dados, treinamento dos modelos e avaliação.
-
-**README.md**  
-Documentação geral do projeto.
-
----
-
-# Preparação dos Dados
-
-A preparação dos dados foi uma etapa fundamental para garantir o bom desempenho dos modelos.
-
-## Classificação das Variáveis
-
-As variáveis foram divididas em dois grupos:
-
-### Variáveis Numéricas
-Exemplos:
-
-- `tenure`
-- `MonthlyCharges`
-- `TotalCharges`
-
-### Variáveis Categóricas
-Exemplos:
-
-- `Contract`
-- `InternetService`
-- `PaymentMethod`
-- `Partner`
-- `Dependents`
-
-Essa separação foi necessária para aplicar **transformações adequadas a cada tipo de variável**.
-
----
-
-## Codificação de Variáveis Categóricas
-
-As variáveis categóricas foram transformadas utilizando:
-
-**OneHotEncoder**
-
-Essa técnica cria colunas binárias para cada categoria possível, permitindo que os modelos de Machine Learning interpretem corretamente essas variáveis.
-
-Exemplo:
-
-```
-Contract
-Monthly
-One year
-Two year
-```
-
-Se transforma em:
-
-```
-Contract_Monthly
-Contract_OneYear
-Contract_TwoYear
 ```
 
 ---
 
-## Normalização dos Dados
-
-As variáveis numéricas foram normalizadas utilizando:
-
-```
-StandardScaler
-```
-
-Essa técnica padroniza os dados para média 0 e desvio padrão 1, o que melhora o desempenho de modelos como:
-
-- Regressão Logística
-- KNN
-- SVM
-
----
-
-## Separação em Treino e Teste
-
-Os dados foram divididos em dois conjuntos:
-
-- **Treino:** 80%
-- **Teste:** 20%
-
-Utilizando:
-
-```python
-train_test_split()
-```
-
-O conjunto de treino é utilizado para **treinar os modelos**, enquanto o conjunto de teste serve para **avaliar a capacidade de generalização**.
-
----
-
-# 🤖 Modelagem e Escolha dos Modelos
-
-Foram utilizados diferentes algoritmos de classificação para prever o churn:
-
-- Regressão Logística
-- K-Nearest Neighbors (KNN)
-- Random Forest
-- Support Vector Machine (SVM)
-
-### Justificativa das Escolhas
-
-**Regressão Logística**
-
-- Modelo interpretável
-- Permite analisar coeficientes das variáveis
-
-**KNN**
-
-- Baseado em similaridade entre clientes
-- Útil para capturar padrões locais nos dados
-
-**Random Forest**
-
-- Modelo robusto
-- Reduz risco de overfitting
-- Permite análise de importância das variáveis
-
-**SVM**
-
-- Bom desempenho em problemas de classificação
-- Capaz de criar fronteiras complexas entre classes
-
----
-
-# Análise Exploratória de Dados (EDA)
-
-Durante a EDA foram gerados diversos gráficos para entender melhor os dados.
-
-## Distribuição de Churn
-
-Gráfico mostrando a proporção de clientes que cancelaram e os que permaneceram.
-
-Insights:
-
-- A maioria dos clientes **não cancelou**, indicando um dataset desbalanceado.
-
----
-
-## Relação entre Tempo de Contrato e Churn
-
-Clientes com **menor tempo de permanência** apresentam maior taxa de evasão.
-
-Insight importante:
-
-Clientes novos possuem **maior risco de cancelamento**.
-
----
-
-## Valor Mensal vs Churn
-
-Clientes com **MonthlyCharges mais altos** apresentam maior probabilidade de churn.
-
-Possível causa:
-
-- Percepção de custo-benefício menor
-- Ofertas mais competitivas da concorrência
-
----
-
-## Importância das Variáveis (Random Forest)
-
-O modelo Random Forest permitiu identificar as variáveis mais relevantes.
-
-Principais fatores identificados:
-
-- **Tipo de contrato**
-- **Tempo de permanência (tenure)**
-- **Valor mensal**
-- **Serviços adicionais contratados**
-
----
-
-# Principais Insights
-
-A análise revelou alguns fatores críticos para churn:
-
-1️⃣ Clientes com **contrato mensal** cancelam mais frequentemente.
-
-2️⃣ Clientes com **baixo tempo de permanência** possuem maior risco de evasão.
-
-3️⃣ **Valores mensais altos** aumentam a probabilidade de churn.
-
-4️⃣ Clientes sem **serviços adicionais** demonstram menor fidelização.
-
-Esses fatores podem orientar **estratégias de retenção**.
-
----
-
-# Como Executar o Projeto
-
-## 1️⃣ Clonar o Repositório
+## ▶️ Como executar
 
 ```bash
-git clone https://github.com/seu-usuario/telecomx-churn-analysis.git
-```
-
----
-
-## 2️⃣ Executar o Notebook
-
-Abra o Jupyter Notebook:
-
-```bash
+git clone https://github.com/EduardoCunhaConti/Challenge-Alura-TelecomX-Parte-2.git
+cd Challenge-Alura-TelecomX-Parte-2
+pip install pandas matplotlib seaborn scikit-learn jupyter
 jupyter notebook
 ```
 
-Em seguida, abra:
-
-```
-notebooks/Alura_TelecomX_Parte_2.ipynb
-```
-
-Execute as células sequencialmente.
+1. Abra `Challenge Alura_TelecomX_Parte_2.ipynb`.
+2. O notebook lê `/content/dados_tratados.csv` (caminho do Google Colab). No Colab, envie o CSV para a pasta `/content`; localmente, ajuste a variável `url` na segunda célula.
+3. Execute as células em ordem.
 
 ---
 
-## 4️⃣ Carregar os Dados
+## 👨‍💻 Autor
 
-Os dados tratados estão no arquivo:
-
-```
-telecom_churn_tratado.csv
-```
-
-Caso necessário, ajuste o caminho no notebook:
-
----
-
-# 👨‍💻 Autor
-
-Projeto desenvolvido por Eduardo Conti para análise de **evasão de clientes utilizando Machine Learning**.
+Eduardo da Cunha Conti — Ciência da Computação.
